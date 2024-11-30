@@ -8,24 +8,30 @@ import cors from "cors";
 
 const PORT = process.env.PORT || 8080;
 
-const app = express();
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+async function startServer() {
+  const app = express();
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
 
-app.use(express.json()); // Body parser middleware
-app.use(cors()); // Cross-Origin Resource Sharing middleware
+  app.use(express.json()); // Body parser middleware
+  app.use(cors()); // Cross-Origin Resource Sharing middleware
 
-// Start Apollo Server
-server.start().then(() => {
-// Attach Apollo middleware to Express
-app.use("/graphql", expressMiddleware(server));
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Welcome to the GraphQL Project" });
-});
-// Start the Express server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}/graphql`);
-});
+  // Start Apollo Server
+  await server.start();
+
+  // Attach Apollo middleware to Express
+  app.use("/graphql", expressMiddleware(server));
+  app.get("/", (req, res) => {
+    res.status(200).json({message: "Welcome to the GraphQL Project"})
+  })
+  // Start the Express server
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}/graphql`);
+  });
+}
+
+startServer().catch((error) => {
+  console.error("Error starting server:", error);
 });
