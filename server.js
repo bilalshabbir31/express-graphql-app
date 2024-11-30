@@ -1,0 +1,35 @@
+import express from "express";
+import "dotenv/config";
+import { ApolloServer } from "@apollo/server";
+import { typeDefs } from "./graphql/schema.js";
+import { resolvers } from "./graphql/resolvers.js"; // Note: `resolvers` should be plural to match convention
+import { expressMiddleware } from "@apollo/server/express4";
+import cors from "cors";
+
+const PORT = process.env.PORT || 8080;
+
+async function startServer() {
+  const app = express();
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+
+  app.use(express.json()); // Body parser middleware
+  app.use(cors()); // Cross-Origin Resource Sharing middleware
+
+  // Start Apollo Server
+  await server.start();
+
+  // Attach Apollo middleware to Express
+  app.use("/graphql", expressMiddleware(server));
+
+  // Start the Express server
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}/graphql`);
+  });
+}
+
+startServer().catch((error) => {
+  console.error("Error starting server:", error);
+});
