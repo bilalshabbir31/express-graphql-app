@@ -23,7 +23,9 @@ async function startServer() {
 
   // Attach Apollo middleware to Express
   app.use("/graphql", expressMiddleware(server));
-
+  app.get("/", (req, res) => {
+    res.status(200).json({message: "Welcome to the GraphQL Project"})
+  })
   // Start the Express server
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}/graphql`);
