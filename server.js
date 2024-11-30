@@ -8,47 +8,34 @@ import cors from "cors";
 
 const PORT = process.env.PORT || 8080;
 
-const app = express();
+async function startServer() {
+  const app = express();
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
 
-// Create Apollo Server
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+  app.use(express.json()); // Body parser middleware
+  app.use(cors()); // Cross-Origin Resource Sharing middleware
 
-// Middleware
-app.use(express.json());
-app.use(cors());
-
-// Apollo Server startup and middleware
-const startServer = async () => {
+  // Start Apollo Server
   await server.start();
-  app.use("/graphql", expressMiddleware(server));
-};
 
-// Root route
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Welcome to the GraphQL Project" });
+  // Attach Apollo middleware to Express
+  app.use("/graphql", expressMiddleware(server));
+  app.get("/", (req, res) => {
+    res.status(200).json({message: "Welcome to the GraphQL Project"})
+  })
+  // Start the Express server
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}/graphql`);
+  });
+  return app;
+}
+
+const handler = startServer().catch((error) => {
+  console.error("Error starting server:", error);
 });
 
-// Start server for local development
-if (process.env.NODE_ENV !== "production") {
-  startServer().then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}/graphql`);
-    });
-  });
-}
 
-// Export for Vercel
-export default async function handler(req, res) {
-  await startServer();
-  const apolloHandler = expressMiddleware(server);
-
-  // Special handling for Vercel serverless functions
-  return new Promise((resolve) => {
-    apolloHandler(req, res, () => {
-      resolve();
-    });
-  });
-}
+export default handler;
